@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL = 'https://github.com/karan9637/Finance-Project.git'
+        REPO_URL = "https://github.com/karan9637/Finance-Project.git"    
         DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
     }
 
