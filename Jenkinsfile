@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                git branch: 'main', url: "${https://github.com/karan9637/Finance-Project.git}"
+                git branch: 'main', url: REPO_URL
             }
         }
         stage('Provision Infrastructure with Terraform') {
