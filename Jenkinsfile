@@ -1,42 +1,68 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage('checkout the code from github'){
-            steps{
-                 git url: 'https://github.com/akshu20791/Banking-java-project/'
-                 echo 'github url checkout'
+
+    environment {
+        REPO_URL = 'https://github.com/karan9637/Finance-Project.git'
+        DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: "${https://github.com/karan9637/Finance-Project.git}"
             }
         }
-        stage('codecompile with akshat'){
-            steps{
-                echo 'starting compiling'
-                sh 'mvn compile'
+        stage('Provision Infrastructure with Terraform') {
+            steps {
+                script {
+                    sh '''
+                    cd terraform
+                    terraform init
+                    terraform apply -auto-approve
+                    '''
+                }
             }
         }
-        stage('codetesting with akshat'){
-            steps{
+        stage('Build and Test') {
+            steps {
+                sh 'mvn clean package'
                 sh 'mvn test'
             }
         }
-        stage('qa with akshat'){
-            steps{
-                sh 'mvn checkstyle:checkstyle'
+        stage('Dockerize') {
+            steps {
+                script {
+                    docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                }
             }
         }
-        stage('package with akshat'){
-            steps{
-                sh 'mvn package'
+        stage('Deploy to Test Server') {
+            steps {
+                script {
+                    sh '''
+                    TEST_SERVER_IP=$(cd terraform && terraform output -raw test_server_ip)
+                    ssh -o StrictHostKeyChecking=no ec2-user@$TEST_SERVER_IP "docker run -d -p 8080:8080 ${DOCKER_IMAGE}:${env.BUILD_ID}"
+                    '''
+                }
             }
         }
-        stage('run dockerfile'){
-          steps{
-               sh 'docker build -t myimg .'
-           }
-         }
-        stage('port expose'){
-            steps{
-                sh 'docker run -dt -p 8091:8091 --name c000 myimg'
+        stage('Run Selenium Tests') {
+            steps {
+                sh 'mvn verify -P selenium-tests'
             }
-        }   
+        }
+        stage('Deploy to Production Server') {
+            when {
+                expression { currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    sh '''
+                    PROD_SERVER_IP=$(cd terraform && terraform output -raw prod_server_ip)
+                    ssh -o StrictHostKeyChecking=no ec2-user@$PROD_SERVER_IP "docker run -d -p 8080:8080 ${DOCKER_IMAGE}:${env.BUILD_ID}"
+                    '''
+                }
+            }
+        }
     }
 }
