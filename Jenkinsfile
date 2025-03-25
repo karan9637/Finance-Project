@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    tools {
+    jdk 'JDK-17'
+    maven 'Maven-3.9.6'
+    }
+
     environment {
         REPO_URL = "https://github.com/karan9637/Finance-Project.git"    
         DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
