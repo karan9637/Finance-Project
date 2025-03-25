@@ -40,6 +40,7 @@ pipeline {
                 script {
                     sh """
                     /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${TEST_SERVER_IP} << EOF
+                    docker login -u "ujjwalsharma3201" -p "bhole@123" 
                     /usr/bin/docker stop finance_app || true
                     /usr/bin/docker rm finance_app || true
                     /usr/bin/docker pull ${DOCKER_IMAGE}:${BUILD_ID}
