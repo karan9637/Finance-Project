@@ -6,7 +6,7 @@ pipeline {
         maven 'maven-3.8'
     }
 
-    environment {
+    environment {  
         REPO_URL = "https://github.com/karan9637/Finance-Project.git"
         DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
         DOCKER_USER = 'ujjwalsharma3201'
@@ -27,8 +27,8 @@ pipeline {
                     cd terraform
                     terraform init
                     terraform apply -auto-approve
-                    echo "TEST_SERVER_IP=$(terraform output -raw test_server_ip)" >> env.properties
-                    echo "PROD_SERVER_IP=$(terraform output -raw prod_server_ip)" >> env.properties
+                    echo "TEST_SERVER_IP=\$(terraform output -raw test_server_ip)" >> env.properties
+                    echo "PROD_SERVER_IP=\$(terraform output -raw prod_server_ip)" >> env.properties
                     """
                 }
                 script {
@@ -44,9 +44,9 @@ pipeline {
                 script {
                     sh """
                     echo "[test]" > ansible/inventory
-                    echo "${TEST_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory
+                    echo "\${TEST_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory
                     echo "[prod]" >> ansible/inventory
-                    echo "${PROD_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory
+                    echo "\${PROD_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory
                     """
                     sh "cat ansible/inventory"
                 }
@@ -82,12 +82,12 @@ pipeline {
             steps {
                 script {
                     sh """
-                    /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${TEST_SERVER_IP} << EOF
-                    docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
+                    /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@\${TEST_SERVER_IP} << EOF
+                    docker login -u "\${DOCKER_USER}" -p "\${DOCKER_PASS}"
                     docker stop finance_app || true
                     docker rm finance_app || true
-                    docker pull ${DOCKER_IMAGE}:${BUILD_ID}
-                    docker run -d --name finance_app -p 8080:8080 ${DOCKER_IMAGE}:${BUILD_ID}
+                    docker pull \${DOCKER_IMAGE}:\${BUILD_ID}
+                    docker run -d --name finance_app -p 8080:8080 \${DOCKER_IMAGE}:\${BUILD_ID}
                     EOF
                     """
                 }
@@ -107,11 +107,11 @@ pipeline {
             steps {
                 script {
                     sh """
-                    /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@${PROD_SERVER_IP} << EOF
+                    /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@\${PROD_SERVER_IP} << EOF
                     docker stop finance_app || true
                     docker rm finance_app || true
-                    docker pull ${DOCKER_IMAGE}:${BUILD_ID}
-                    docker run -d --name finance_app -p 8080:8080 ${DOCKER_IMAGE}:${BUILD_ID}
+                    docker pull \${DOCKER_IMAGE}:\${BUILD_ID}
+                    docker run -d --name finance_app -p 8080:8080 \${DOCKER_IMAGE}:\${BUILD_ID}
                     EOF
                     """
                 }
