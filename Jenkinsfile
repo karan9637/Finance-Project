@@ -53,7 +53,7 @@ pipeline {
                     /usr/bin/docker rm finance_app || true
                     /usr/bin/docker pull ${DOCKER_IMAGE}:${BUILD_ID}
                     /usr/bin/docker run -d --name finance_app -p 8080:8080 ${DOCKER_IMAGE}:${BUILD_ID}
-                    EOF
+            EOF
                     """
                 }
             }
