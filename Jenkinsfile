@@ -9,8 +9,6 @@ pipeline {
     environment {  
         REPO_URL = "https://github.com/karan9637/Finance-Project.git"
         DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
-        DOCKER_USER = 'ujjwalsharma3201'
-        DOCKER_PASS = 'bhole@123'
     }
 
     stages {
@@ -22,19 +20,27 @@ pipeline {
 
         stage('Terraform - Provision Infrastructure') {
             steps {
-                script {
-                    sh """
-                    cd terraform
-                    terraform init
-                    terraform apply -auto-approve
-                    echo "TEST_SERVER_IP=\$(terraform output -raw test_server_ip)" >> env.properties
-                    echo "PROD_SERVER_IP=\$(terraform output -raw prod_server_ip)" >> env.properties
-                    """
-                }
-                script {
-                    def props = readProperties file: 'env.properties'
-                    env.TEST_SERVER_IP = props['TEST_SERVER_IP']
-                    env.PROD_SERVER_IP = props['PROD_SERVER_IP']
+                withCredentials([
+                    string(credentialsId: 'AWS_ACCESS_KEY_ID', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'AWS_SECRET_ACCESS_KEY', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    script {
+                        sh """
+                        set -e
+                        cd terraform
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        terraform init
+                        terraform apply -auto-approve
+                        echo "TEST_SERVER_IP=\$(terraform output -raw test_server_ip)" >> env.properties
+                        echo "PROD_SERVER_IP=\$(terraform output -raw prod_server_ip)" >> env.properties
+                        """
+                    }
+                    script {
+                        def props = readProperties file: 'env.properties'
+                        env.TEST_SERVER_IP = props['TEST_SERVER_IP']
+                        env.PROD_SERVER_IP = props['PROD_SERVER_IP']
+                    }
                 }
             }
         }
@@ -43,6 +49,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                    set -e
                     echo "[test]" > ansible/inventory
                     echo "\${TEST_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory
                     echo "[prod]" >> ansible/inventory
@@ -73,8 +80,16 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                sh "docker login -u '${DOCKER_USER}' -p '${DOCKER_PASS}'"
-                sh "docker push ${DOCKER_IMAGE}:${BUILD_ID}"
+                withCredentials([
+                    string(credentialsId: 'DOCKER_USER', variable: 'DOCKER_USER'),
+                    string(credentialsId: 'DOCKER_PASS', variable: 'DOCKER_PASS')
+                ]) {
+                    sh """
+                    set -e
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push ${DOCKER_IMAGE}:${BUILD_ID}
+                    """
+                }
             }
         }
 
@@ -82,6 +97,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                    set -e
                     /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@\${TEST_SERVER_IP} << EOF
                     docker login -u "\${DOCKER_USER}" -p "\${DOCKER_PASS}"
                     docker stop finance_app || true
@@ -107,6 +123,7 @@ pipeline {
             steps {
                 script {
                     sh """
+                    set -e
                     /usr/bin/ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@\${PROD_SERVER_IP} << EOF
                     docker stop finance_app || true
                     docker rm finance_app || true
