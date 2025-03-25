@@ -51,9 +51,9 @@ pipeline {
                     sh """
                     set -e
                     echo "[test]" > ansible/inventory
-                    echo "\${TEST_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/mykey.pem" >> ansible/inventory
+                    echo "\${TEST_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/mykey.pem" >> ansible/inventory
                     echo "[prod]" >> ansible/inventory
-                    echo "\${PROD_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=~/.ssh/mykey.pem" >> ansible/inventory
+                    echo "\${PROD_SERVER_IP} ansible_ssh_user=ec2-user ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/mykey.pem" >> ansible/inventory
                     """
                     sh "cat ansible/inventory"
                 }
