@@ -9,8 +9,8 @@ pipeline {
     environment {
         REPO_URL = "https://github.com/karan9637/Finance-Project.git"    
         DOCKER_IMAGE = 'ujjwalsharma3201/finance_app'
-        TEST_SERVER_IP = "3.110.90.201"  // Replace with actual test server IP
-        PROD_SERVER_IP = "65.2.73.133"  // Replace with actual production server IP
+        TEST_SERVER_IP = "13.232.10.182"  // Replace with actual test server IP
+        PROD_SERVER_IP = "3.110.165.178"  // Replace with actual production server IP
     }
 
     stages {
