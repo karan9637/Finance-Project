@@ -58,7 +58,7 @@ pipeline {
                     sh "cat ansible/inventory"
                 }
                 script {
-                    sh "ansible-playbook -i ansible/inventory ansible-playbook.yml"
+                    sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory ansible-playbook.yml"
                 }
             }
         }
