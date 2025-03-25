@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@${TEST_SERVER_IP} "docker stop finance_app || true && docker rm finance_app || true"
+                    sh "ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ec2-user@13.232.10.182 'docker stop finance_app || true && docker rm finance_app || true'"
                     ssh -o StrictHostKeyChecking=no ec2-user@${TEST_SERVER_IP} "docker pull ${DOCKER_IMAGE}:${env.BUILD_ID}"
                     ssh -o StrictHostKeyChecking=no ec2-user@${TEST_SERVER_IP} "docker run -d --name finance_app -p 8080:8080 ${DOCKER_IMAGE}:${env.BUILD_ID}"
                     '''
