@@ -57,8 +57,8 @@ pipeline {
                     """
                     sh "cat ansible/inventory"
                 }
-                script {
-                    sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory ansible-playbook.yml"
+                withCredentials([sshUserPrivateKey(credentialsId: 'SSH_KEY', keyFileVariable: 'SSH_KEY')]) {
+                    sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory ansible-playbook.yml --private-key=$SSH_KEY"
                 }
             }
         }
