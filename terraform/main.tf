@@ -1,9 +1,9 @@
 provider "aws" {
-  region = "us-east-1"  # Change this to your AWS region
+  region = "ap-south-1"  # Change this to your AWS region
 }
 
 resource "aws_instance" "test_server" {
-  ami           = "ami-0c55b159cbfafe1f0"  # Amazon Linux 2 AMI ID
+  ami           = "ami-0e35ddab05955cf57"  # Amazon Linux 2 AMI ID
   instance_type = "t2.micro"
   key_name      = "mykey"  # Replace with your AWS key pair name
   tags = {
@@ -12,7 +12,7 @@ resource "aws_instance" "test_server" {
 }
 
 resource "aws_instance" "prod_server" {
-  ami           = "ami-0c55b159cbfafe1f0"
+  ami           = "ami-0e35ddab05955cf57"
   instance_type = "t2.micro"
   key_name      = "mykey"
   tags = {
