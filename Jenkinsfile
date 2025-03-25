@@ -48,20 +48,21 @@ pipeline {
         stage('Ansible - Configure Servers') {
             steps {
                 script {
-                    sh """
-                    set -e
-                    echo "[test]" > ansible/inventory
-                    echo "\${TEST_SERVER_IP} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/mykey.pem" >> ansible/inventory
-                    echo "[prod]" >> ansible/inventory
-                    echo "\${PROD_SERVER_IP} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=/var/lib/jenkins/.ssh/mykey.pem" >> ansible/inventory
-                    """
-                    sh "cat ansible/inventory"
-                }
-                withCredentials([sshUserPrivateKey(credentialsId: 'SSH_KEY', keyFileVariable: 'SSH_KEY')]) {
-                    sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory ansible-playbook.yml --private-key=$SSH_KEY"
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ansible-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                        sh """
+                        set -e
+                        echo "[test]" > ansible/inventory
+                        echo "${TEST_SERVER_IP} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=$SSH_KEY" >> ansible/inventory
+                        echo "[prod]" >> ansible/inventory
+                        echo "${PROD_SERVER_IP} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=$SSH_KEY" >> ansible/inventory
+                        """
+                        sh "cat ansible/inventory"
+                        sh "ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i ansible/inventory ansible-playbook.yml --private-key=$SSH_KEY"
+                    }
                 }
             }
         }
+
 
         stage('Build and Test') {
             steps {
